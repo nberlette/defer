@@ -1,0 +1,13 @@
+{
+  "deno.enable": true,
+  "deno.codeLens.test": true,
+  "deno.testing.args": [
+    "--allow-all",
+    "--no-check"
+  ],
+  "deno.testing.enable": true,
+  "deno.unstable": true,
+  "deno.lint": true,
+  "editor.defaultFormatter": "denoland.vscode-deno",
+  "editor.formatOnSave": true
+}

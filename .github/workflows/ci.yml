@@ -1,0 +1,30 @@
+name: CI
+on: [push, pull_request]
+
+# deno ci/cd workflow
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: 1.x
+          cache: true
+      - name: Cache dependencies
+        uses: denolib/cache@v2
+        with:
+          cache: true
+          deps: true
+      - name: Lint
+        run: deno lint --unstable --no-check
+      - name: Test
+        run: deno test --allow-all --unstable --no-check
+      - name: Cache dependencies
+        uses: denolib/cache@v2
+        with:
+          cache: true
+          deps: true

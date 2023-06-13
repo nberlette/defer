@@ -7,7 +7,6 @@ you complete control over its resolution logic. It also emits a
 [custom event handlers](#using-event-handler-methods), for tracking internal
 state changes or triggering custom callbacks.
 
-
 ## Features
 
 - Extends the built-in `Promise` class, giving you control over when it is
@@ -30,7 +29,6 @@ const deferred = new Defer<string>(); // => Deferred { <pending> }
 deferred.resolve("Hello!"); // => Deferred { <fulfilled> "Hello!" }
 ```
 
-
 ### `Defer` constructor signature
 
 ```ts
@@ -39,7 +37,10 @@ new Defer<T>(handlers: DeferEventHandlers<T>);
 new Defer<T>(executor: DeferExecutor<T>, handlers?: DeferEventHandlers<T>);
 ```
 
-> **Note**: see the sections on [**_using event handler methods_**](#using-event-handler-methods) and [**_listening to promise events_**](#listening-to-promise-events) for more details on Defer's event-driven API.
+> **Note**: see the sections on
+> [**_using event handler methods_**](#using-event-handler-methods) and
+> [**_listening to promise events_**](#listening-to-promise-events) for more
+> details on Defer's event-driven API.
 
 ### `defer` factory function
 
@@ -56,9 +57,9 @@ deferred.resolve(42); // => Deferred { <fulfilled> 42 }
 
 ## Usage and Examples
 
-Creating a <b><em>Defer</em></b>red Promise using the `Defer` class is very 
-straightforward; it follows the same design pattern made popular by its many 
-predecessors. It provides the `resolve` and `reject` methods as properties of 
+Creating a <b><em>Defer</em></b>red Promise using the `Defer` class is very
+straightforward; it follows the same design pattern made popular by its many
+predecessors. It provides the `resolve` and `reject` methods as properties of
 the Promise object itself.
 
 Testing a simple deferred resolution:

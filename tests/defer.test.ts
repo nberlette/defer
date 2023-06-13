@@ -120,16 +120,12 @@ Deno.test("emits a settled event when it is settled", () => {
   assertEquals(events[0].detail.value, 42);
 });
 
-Deno.test("emits events in the correct order", () => {
+Deno.test("emits events in the correct order", async () => {
   const deferred = new Defer<number>();
   const events: string[] = [];
 
   deferred.onfulfilled = () => {
     events.push("onfulfilled");
-  };
-
-  deferred.onresolved = () => {
-    events.push("onresolved");
   };
 
   deferred.onrejected = () => {
@@ -141,8 +137,10 @@ Deno.test("emits events in the correct order", () => {
   };
 
   deferred.resolve(42);
-  assert(events.length === 3);
-  assertEquals(events, ["onfulfilled", "onresolved", "onsettled"]);
+  await deferred.then(() => {
+    assertEquals(events.length, 2);
+    assertEquals(events, ["onfulfilled", "onsettled"]);
+  });
 });
 
 Deno.test("Defer.resolve", async () => {
@@ -216,5 +214,3 @@ Deno.test("Defer.then", async () => {
   const finalResult = await result;
   assertEquals(finalResult, "Success");
 });
-
-// })

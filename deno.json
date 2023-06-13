@@ -1,15 +1,11 @@
 {
   "lock": true,
-  "nodeModulesDir": true,
-  "fmt": {
-    "proseWrap": "preserve"
-  },
+  "nodeModulesDir": false,
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".deno",
+    ".archive"
   ],
-  "compilerOptions": {
-    "allowJs": true
-  },
   "tasks": {
     "test": "deno test --unstable --allow-all --no-check",
     "lint": "deno lint --unstable",

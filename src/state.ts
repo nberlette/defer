@@ -10,16 +10,11 @@ export interface RejectedResult {
   reason: unknown;
 }
 
-interface AnySettledResult<T = unknown> {
-  status: "rejected";
+export interface SettledResult<T = unknown> {
+  status: "fulfilled" | "rejected";
   reason?: unknown;
-  value: T;
+  value?: T;
 }
-
-export type SettledResult<T> =
-  | FulfilledResult<T>
-  | RejectedResult
-  | AnySettledResult<T>;
 
 export interface StateChangeResult {
   readonly newState: State;

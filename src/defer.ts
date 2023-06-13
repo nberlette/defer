@@ -152,7 +152,7 @@ export class Defer<T = unknown> extends Promise<T> {
     });
 
     const eventListeners = [
-      ["addEventListener", "addListener", "on"],
+      ["addEventListener", "addListener", "on", "once"],
       ["removeEventListener", "removeListener", "off"],
       ["dispatchEvent", "fire", "emit"],
     ] as const;
@@ -161,41 +161,18 @@ export class Defer<T = unknown> extends Promise<T> {
       const [listener] = listeners;
 
       Object.defineProperties(this, {
-        ...(listeners as readonly string[]).reduce((acc, key) => ({
-          ...acc,
-          [key]: {
-            ...descriptor,
-            value: this.#eventTarget[listener].bind(this.#eventTarget),
-          },
-        }), {} as PropertyDescriptorMap),
-      });
-    }
-
-    const eventHandlers = [
-      "onstatechange",
-      "onsettled",
-      "onfulfilled",
-      "onresolved",
-      "onrejected",
-    ] as const;
-
-    for (const handler of eventHandlers) {
-      const handlerFn = this.#handlers?.[handler] ?? null;
-      Object.defineProperty(this, handler, {
-        get: () => (...args: Parameters<typeof handlerFn & {}>) => {
-          if (handlerFn) return Reflect.apply(handlerFn, this, args);
-        },
-        set: (value) => {
-          if (typeof value === "function") {
-            this.#handlers[handler] = value;
-          } else if (value == null) {
-            Reflect.deleteProperty(this.#handlers, handler);
-          } else {
-            throw new TypeError(
-              `Expected ${handler} to be a function or null, got ${typeof value}`,
-            );
+        ...(listeners as readonly string[]).reduce((acc, key) => {
+          const fn = this.#eventTarget[listener].bind(this.#eventTarget);
+          let value: typeof fn = fn;
+          if (key === "once") {
+            // deno-lint-ignore no-explicit-any
+            value = (...args: any[]) => {
+              const [type, listener, options = {}] = args;
+              fn(type, listener, { ...options, once: true });
+            };
           }
-        },
+          return ({ ...acc, [key]: { ...descriptor, value } });
+        }, {} as PropertyDescriptorMap),
       });
     }
   }
@@ -313,17 +290,97 @@ export class Defer<T = unknown> extends Promise<T> {
       | null,
   ): Promise<TResult1 | TResult2> {
     const result = super.then(onfulfilled, onrejected);
-    this.#changeState("fulfilled");
-    this.dispatchEvent(new FulfilledEvent(this.value!));
-    this.onfulfilled?.call?.(this as Defer<T>, this.value as T);
     return result;
   }
 
-  declare onstatechange: EventHandlers<T>["onstatechange"] & {};
-  declare onsettled: EventHandlers<T>["onsettled"] & {};
-  declare onfulfilled: EventHandlers<T>["onfulfilled"] & {};
-  declare onresolved: EventHandlers<T>["onresolved"] & {};
-  declare onrejected: EventHandlers<T>["onrejected"] & {};
+  #noop = () => {};
+
+  public get onfulfilled() {
+    return (...args: Parameters<EventHandlers<T>["onfulfilled"] & {}>): void =>
+      Reflect.apply(this.handlers?.onfulfilled ?? this.#noop, this, args);
+  }
+
+  public set onfulfilled(value) {
+    if (typeof value === "function") {
+      this.#handlers.onfulfilled = value;
+    } else if (value == null) {
+      Reflect.deleteProperty(this.#handlers, "onfulfilled");
+    } else {
+      throw new TypeError(
+        `Expected 'onfulfilled' to be a function, got ${typeof value}`,
+      );
+    }
+  }
+
+  public get onrejected() {
+    return (...args: Parameters<EventHandlers<T>["onrejected"] & {}>): void =>
+      Reflect.apply(this.handlers?.onrejected ?? this.#noop, this, args);
+  }
+
+  public set onrejected(value) {
+    if (typeof value === "function") {
+      this.#handlers.onrejected = value;
+    } else if (value == null) {
+      Reflect.deleteProperty(this.#handlers, "onrejected");
+    } else {
+      throw new TypeError(
+        `Expected 'onrejected' to be a function, got ${typeof value}`,
+      );
+    }
+  }
+
+  public get onresolved() {
+    return (...args: Parameters<EventHandlers<T>["onresolved"] & {}>): void =>
+      Reflect.apply(this.handlers?.onresolved ?? this.#noop, this, args);
+  }
+
+  public set onresolved(value) {
+    if (typeof value === "function") {
+      this.#handlers.onresolved = value;
+    } else if (value == null) {
+      Reflect.deleteProperty(this.#handlers, "onresolved");
+    } else {
+      throw new TypeError(
+        `Expected 'onresolved' to be a function, got ${typeof value}`,
+      );
+    }
+  }
+
+  public get onstatechange() {
+    return (
+      ...args: Parameters<EventHandlers<T>["onstatechange"] & {}>
+    ): void =>
+      Reflect.apply(this.handlers?.onstatechange ?? this.#noop, this, args);
+  }
+
+  public set onstatechange(value) {
+    if (typeof value === "function") {
+      this.#handlers.onstatechange = value;
+    } else if (value == null) {
+      Reflect.deleteProperty(this.#handlers, "onstatechange");
+    } else {
+      throw new TypeError(
+        `Expected 'onstatechange' to be a function, got ${typeof value}`,
+      );
+    }
+  }
+
+  public get onsettled() {
+    return (...args: Parameters<EventHandlers<T>["onsettled"] & {}>): void =>
+      Reflect.apply(this.handlers?.onsettled ?? this.#noop, this, args);
+  }
+
+  public set onsettled(value) {
+    if (typeof value === "function") {
+      this.#handlers.onsettled = value;
+    } else if (value == null) {
+      Reflect.deleteProperty(this.#handlers, "onsettled");
+    } else {
+      throw new TypeError(
+        `Expected 'onsettled' to be a function, got ${typeof value}`,
+      );
+    }
+  }
 
   #changeState<const S extends State>(state: S): asserts this is this & {
     readonly state: S;
@@ -331,7 +388,7 @@ export class Defer<T = unknown> extends Promise<T> {
     const previous = this.#state;
     this.#state = state;
     this.dispatchEvent(new StateChangeEvent(this.state, previous));
-    this.onstatechange?.call?.(this as Defer<T>, this.state, previous);
+    this.onstatechange(this.state, previous);
   }
 
   #settle(valueOrReason: unknown) {
@@ -340,7 +397,7 @@ export class Defer<T = unknown> extends Promise<T> {
     } else {
       this.dispatchEvent(new SettledEvent(valueOrReason, "rejected"));
     }
-    this.onsettled?.call?.(this as Defer<T>, valueOrReason, this.state);
+    this.onsettled(valueOrReason, this.state);
   }
 
   /** @internal */
